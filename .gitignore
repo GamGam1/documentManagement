@@ -1,0 +1,10 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Environment-dependent path to Maven home directory
+/mavenHomeManager.xml
+.DS_Store
+backend/src/main/resources/application.properties
+backend/test/
+.idea/
+
