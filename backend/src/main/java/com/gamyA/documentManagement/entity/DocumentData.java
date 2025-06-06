@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "documentData")
-public class documentData {
+public class DocumentData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,11 +35,11 @@ public class documentData {
 
     private Boolean favorite;
 
-    public documentData() {
+    public DocumentData() {
     }
 
     @Autowired
-    public documentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite) {
+    public DocumentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite) {
         this.userId = userId;
         this.documentName = documentName;
         this.uploadDate = uploadDate;

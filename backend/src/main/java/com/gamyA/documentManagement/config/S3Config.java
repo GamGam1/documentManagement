@@ -8,7 +8,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 
-public class s3Config {
+public class S3Config {
 
     @Value("${cloud.aws.credentials.access-key}")
     private String accessKey;
