@@ -53,10 +53,6 @@ public class DocumentData {
         return documentId;
     }
 
-    public void setDocumentId(Long documentId) {
-        this.documentId = documentId;
-    }
-
     public Long getUserId() {
         return userId;
     }

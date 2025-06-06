@@ -7,10 +7,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface DocumentDataRepo extends JpaRepository<DocumentData, Long>{
 
-    DocumentData findByDocumentId(Long documentId);
+    Optional<DocumentData> findByDocumentIdAndUserId(Long documentId, Long userId);
 
     List<DocumentData> findByUserIdAndCategory(Long userId, String category);
 
