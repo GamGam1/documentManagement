@@ -9,9 +9,9 @@ public class documentService {
 
 
     @Value("${app.aws.s3.bucket-name}")
-    private static String bucketName;
+    private String bucketName;
 
-    private static S3Client s3Client;
+    private S3Client s3Client;
 
 
 

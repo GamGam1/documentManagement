@@ -5,6 +5,6 @@
 /mavenHomeManager.xml
 .DS_Store
 backend/src/main/resources/application.properties
-backend/test/
+backend/target/
 .idea/
 
