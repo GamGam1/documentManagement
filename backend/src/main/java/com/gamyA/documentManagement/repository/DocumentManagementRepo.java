@@ -19,7 +19,7 @@ public interface DocumentManagementRepo extends JpaRepository<DocumentData, Long
 
     List<DocumentData> findByUserId(Long userId);
 
-    @Query("SELECT d FROM documentData d " +
+    @Query("SELECT d FROM DocumentData d " +
             "WHERE d.userId = :userId " +
             "AND (:categories IS NULL OR d.category IN :categories) AND (:fileExtensions IS NULL OR  d.fileExtension IN :fileExtensions) " +
             "AND (:favorite IS NULL OR d.favorite = :favorite) " +

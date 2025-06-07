@@ -6,6 +6,7 @@ import com.gamyA.documentManagement.entity.DocumentData;
 import com.gamyA.documentManagement.service.DocumentManagementService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -81,10 +82,10 @@ public class DocumentDataController {
 
      */
 
-    @PostMapping(value="/api/{userId}/upload")
+    @PostMapping(value="/api/{userId}/upload", consumes = "multipart/form-data")
     public void uploadDocument(@PathVariable Long userId,
-                               @Valid @RequestBody UploadDocumentData uploadDocumentData,
-                               @RequestParam MultipartFile file) throws IOException {
+                               @Valid @RequestPart("uploadData") UploadDocumentData uploadDocumentData,
+                               @RequestPart("file") MultipartFile file) throws IOException {
         documentManagementService.uploadFile(userId, uploadDocumentData, file);
     }
      /*

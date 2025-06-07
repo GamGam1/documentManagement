@@ -31,7 +31,7 @@ public class DocumentManagementService {
 
 
     @Value("${app.aws.s3.bucket-name}")
-    private static String bucketName;
+    private String bucketName;
 
     private static S3Client s3Client;
 
@@ -132,7 +132,9 @@ public class DocumentManagementService {
         //get metadata: document name, upload date, get file size, content type
         Double documentSize;
         String documentSizeString;
-        String documentName = file.getOriginalFilename();
+        String fullDocumentName = file.getOriginalFilename();
+        String documentName = fullDocumentName.substring(0, fullDocumentName.lastIndexOf("."));
+        String fileExtension = fullDocumentName.substring(fullDocumentName.lastIndexOf(".") + 1);
         LocalDateTime uploadDate = LocalDateTime.now();
         String documentContentType = file.getContentType();
 
@@ -153,16 +155,16 @@ public class DocumentManagementService {
         UUID uuid =  UUID.randomUUID();
         String s3Key = userId + "/" + uuid + "." + documentContentType;
         DocumentData newDocumentData = new DocumentData(userId,
-                documentName.substring(0, documentName.lastIndexOf(".")), uploadDate, documentSizeString,documentContentType,
-                uploadDocumentData.getCategory(), uploadDocumentData.getFavorite(),s3Key, documentName.substring(documentName.lastIndexOf(".")));
-
-        documentManagementRepo.save(newDocumentData);
+                documentName, uploadDate, documentSizeString,documentContentType,
+                uploadDocumentData.getCategory(), uploadDocumentData.getFavorite(),s3Key,fileExtension);
 
         //upload to awss3
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName).key(s3Key).contentType(file.getContentType()).build();
 
         s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+
+        documentManagementRepo.save(newDocumentData);
 
     }
 
