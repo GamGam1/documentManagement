@@ -1,21 +1,29 @@
 package com.gamyA.documentManagement.service;
 
 import com.gamyA.documentManagement.DTOs.UpdateDocumentData;
+import com.gamyA.documentManagement.DTOs.UploadDocumentData;
 import com.gamyA.documentManagement.entity.DocumentData;
 import com.gamyA.documentManagement.repository.DocumentDataRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DocumentService {
@@ -117,6 +125,36 @@ public class DocumentService {
         }
 
         documentDataRepo.save(currDoc);
+
+    }
+
+    public void uploadFile(UploadDocumentData uploadDocumentData, MultipartFile file) throws IOException {
+        Double documentSize;
+        String documentSizeString;
+        //get metadata: document name, upload date, get file size, content type
+        String documentName = file.getOriginalFilename();
+
+        if(file.getSize() >= (1024 * 1024)){
+            documentSize = (file.getSize() / (1024.0 * 1024.0));
+            documentSize = new BigDecimal(documentSize).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            documentSizeString = (file.getSize() / (1024 * 1024)) + " MB";
+
+        }
+        documentSize = (file.getSize() / (1024.0 * 1024.0));
+        documentSize = new BigDecimal(documentSize).setScale(2, RoundingMode.HALF_UP).doubleValue();
+        documentSizeString = (file.getSize() / (1024 * 1024)) + " MB";
+        LocalDateTime uploadDate = LocalDateTime.now();
+
+
+        //create documentData, need category, favorite, and create the s3Key
+        UUID uuid =  UUID.randomUUID();
+        String s3Key = uploadDocumentData.getUserId() + "/" + uuid + "." + file.getContentType();
+
+        //upload to awss3
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName).key(s3Key).contentType(file.getContentType()).build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
     }
 

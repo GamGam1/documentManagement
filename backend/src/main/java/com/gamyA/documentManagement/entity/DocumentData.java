@@ -39,7 +39,7 @@ public class DocumentData {
     }
 
     @Autowired
-    public DocumentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite) {
+    public DocumentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite, String s3Key) {
         this.userId = userId;
         this.documentName = documentName;
         this.uploadDate = uploadDate;
@@ -47,6 +47,7 @@ public class DocumentData {
         this.contentType = contentType;
         this.category = category;
         this.favorite = favorite;
+        this.s3Key = s3Key;
     }
 
     public Long getDocumentId() {
