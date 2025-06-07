@@ -1,5 +1,6 @@
 package com.gamyA.documentManagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.validation.constraints.*;
@@ -21,6 +22,7 @@ public class DocumentData {
     private String documentName;
 
     //@NotNull(message = "Enter a date")
+    @JsonFormat(pattern = "MMM d yyyy HH:mm:ss")
     private LocalDateTime uploadDate;
 
     //@NotNull(message = "Enter file size")
@@ -35,11 +37,13 @@ public class DocumentData {
 
     private Boolean favorite;
 
+    private String fileExtension;
+
     public DocumentData() {
     }
 
     @Autowired
-    public DocumentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite, String s3Key) {
+    public DocumentData(Long userId, String documentName, LocalDateTime uploadDate, String fileSize, String contentType, String category, Boolean favorite, String s3Key, String fileExtension) {
         this.userId = userId;
         this.documentName = documentName;
         this.uploadDate = uploadDate;
@@ -48,6 +52,7 @@ public class DocumentData {
         this.category = category;
         this.favorite = favorite;
         this.s3Key = s3Key;
+        this.fileExtension = fileExtension;
     }
 
     public Long getDocumentId() {
@@ -116,5 +121,13 @@ public class DocumentData {
 
     public void setFavorite(Boolean favorite) {
         this.favorite = favorite;
+    }
+
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
     }
 }

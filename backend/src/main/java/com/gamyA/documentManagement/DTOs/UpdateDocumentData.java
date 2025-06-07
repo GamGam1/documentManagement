@@ -1,7 +1,7 @@
 package com.gamyA.documentManagement.DTOs;
 
 public class UpdateDocumentData {
-
+    //make sure it doesnt contain periods
     private String documentName;
 
     private String category;

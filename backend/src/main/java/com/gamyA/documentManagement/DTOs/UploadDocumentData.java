@@ -6,7 +6,6 @@ public class UploadDocumentData {
 
     private Boolean favorite;
 
-    private Long userId;
 
     public UploadDocumentData() {
     }
@@ -14,7 +13,6 @@ public class UploadDocumentData {
     public UploadDocumentData(Long userId, String category, Boolean favorite) {
         this.category = category;
         this.favorite = favorite;
-        this.userId = userId;
     }
 
     public String getCategory() {
@@ -33,11 +31,4 @@ public class UploadDocumentData {
         this.favorite = favorite;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
 }

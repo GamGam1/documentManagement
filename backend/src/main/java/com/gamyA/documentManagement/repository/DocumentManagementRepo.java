@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface DocumentDataRepo extends JpaRepository<DocumentData, Long>{
+public interface DocumentManagementRepo extends JpaRepository<DocumentData, Long>{
 
     Optional<DocumentData> findByDocumentIdAndUserId(Long documentId, Long userId);
 
@@ -21,12 +21,15 @@ public interface DocumentDataRepo extends JpaRepository<DocumentData, Long>{
 
     @Query("SELECT d FROM documentData d " +
             "WHERE d.userId = :userId " +
-            "AND (:categories IS NULL OR d.category IN :categories) AND (:contentTypes IS NULL OR  d.contentType IN :contentTypes) " +
+            "AND (:categories IS NULL OR d.category IN :categories) AND (:fileExtensions IS NULL OR  d.fileExtension IN :fileExtensions) " +
             "AND (:favorite IS NULL OR d.favorite = :favorite) " +
-            "AND (d.uploadDate >= :minDate AND d.uploadDate <= :maxDate)")
+            "AND (d.uploadDate >= :minDate AND d.uploadDate <= :maxDate) " +
+            "AND (:name IS NULL OR d.documentName LIKE %:name%)")
     List<DocumentData> findByUserIdFilter(@Param("userId") Long userId
-            , @Param("categories")List<String> categories, @Param("contentTypes") List<String> contentTypes
+            , @Param("categories")List<String> categories, @Param("fileExtensions") List<String> fileExtensions
             , @Param("minDate") LocalDateTime minDate, @Param("maxDate") LocalDateTime maxDate
-            , @Param("favorite") Boolean favorite);
+            , @Param("favorite") Boolean favorite, @Param("name") String name);
+
+
 
 }

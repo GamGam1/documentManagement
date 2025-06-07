@@ -3,7 +3,7 @@ package com.gamyA.documentManagement.service;
 import com.gamyA.documentManagement.DTOs.UpdateDocumentData;
 import com.gamyA.documentManagement.DTOs.UploadDocumentData;
 import com.gamyA.documentManagement.entity.DocumentData;
-import com.gamyA.documentManagement.repository.DocumentDataRepo;
+import com.gamyA.documentManagement.repository.DocumentManagementRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class DocumentService {
+public class DocumentManagementService {
 
 
     @Value("${app.aws.s3.bucket-name}")
@@ -34,12 +35,12 @@ public class DocumentService {
 
     private static S3Client s3Client;
 
-    private static DocumentDataRepo documentDataRepo;
+    private static DocumentManagementRepo documentManagementRepo;
 
     @Autowired
-    public DocumentService(S3Client s3Client, DocumentDataRepo documentDataRepo) {
-        DocumentService.s3Client = s3Client;
-        DocumentService.documentDataRepo = documentDataRepo;
+    public DocumentManagementService(S3Client s3Client, DocumentManagementRepo documentManagementRepo) {
+        DocumentManagementService.s3Client = s3Client;
+        DocumentManagementService.documentManagementRepo = documentManagementRepo;
     }
 
     /*
@@ -50,7 +51,7 @@ public class DocumentService {
 
     public String getPresignUrl(Long userId,Long documentId){
 
-        DocumentData currDoc = documentDataRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
+        DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
         String currS3Key = currDoc.getS3Key();
 
         try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1).build()){
@@ -71,8 +72,7 @@ public class DocumentService {
 
 
     public String getShareableLink(Long userId, Long documentId, Duration duration){
-
-        DocumentData currDoc = documentDataRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
+        DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
         String currS3Key = currDoc.getS3Key();
 
         try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1).build()){
@@ -92,16 +92,16 @@ public class DocumentService {
     }
 
     public List<DocumentData> getAllDocumentData(Long userId){
-        List<DocumentData> currDocs = documentDataRepo.findByUserId(userId);
+        List<DocumentData> currDocs = documentManagementRepo.findByUserId(userId);
         if(currDocs.isEmpty()){
             throw new RuntimeException("user not found");
         }
         return currDocs;
     }
 
-    public List<DocumentData> getAllDocumentDataFilter(Long userId, List<String> categories, List<String> contentTypes
-                                                        , LocalDateTime maxDate, LocalDateTime minDate, Boolean favorite){
-        List<DocumentData> currDocs = documentDataRepo.findByUserIdFilter(userId,categories,contentTypes,minDate,maxDate,favorite);
+    public List<DocumentData> getAllDocumentDataFilter(Long userId, List<String> categories, List<String> fileExtensions
+                                                        , LocalDateTime maxDate, LocalDateTime minDate, Boolean favorite, String name){
+        List<DocumentData> currDocs = documentManagementRepo.findByUserIdFilter(userId,categories,fileExtensions,minDate,maxDate,favorite, name);
         if(currDocs.isEmpty()){
             throw new RuntimeException("no files found");
         }
@@ -110,7 +110,7 @@ public class DocumentService {
 
     public void updateDocumentData(Long userId, Long documentId, UpdateDocumentData newDocumentData){
 
-        DocumentData currDoc = documentDataRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
+        DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found pr document not associated with user"));
 
         if(newDocumentData.getDocumentName() != null){
             currDoc.setDocumentName(newDocumentData.getDocumentName());
@@ -124,31 +124,39 @@ public class DocumentService {
             currDoc.setFavorite(newDocumentData.getFavorite());
         }
 
-        documentDataRepo.save(currDoc);
+        documentManagementRepo.save(currDoc);
 
     }
 
-    public void uploadFile(UploadDocumentData uploadDocumentData, MultipartFile file) throws IOException {
+    public void uploadFile(Long userId, UploadDocumentData uploadDocumentData, MultipartFile file) throws IOException {
+        //get metadata: document name, upload date, get file size, content type
         Double documentSize;
         String documentSizeString;
-        //get metadata: document name, upload date, get file size, content type
         String documentName = file.getOriginalFilename();
+        LocalDateTime uploadDate = LocalDateTime.now();
+        String documentContentType = file.getContentType();
 
         if(file.getSize() >= (1024 * 1024)){
             documentSize = (file.getSize() / (1024.0 * 1024.0));
             documentSize = new BigDecimal(documentSize).setScale(2, RoundingMode.HALF_UP).doubleValue();
-            documentSizeString = (file.getSize() / (1024 * 1024)) + " MB";
+            documentSizeString = documentSize + " MB";
 
         }
-        documentSize = (file.getSize() / (1024.0 * 1024.0));
-        documentSize = new BigDecimal(documentSize).setScale(2, RoundingMode.HALF_UP).doubleValue();
-        documentSizeString = (file.getSize() / (1024 * 1024)) + " MB";
-        LocalDateTime uploadDate = LocalDateTime.now();
+        else{
+            documentSize = (file.getSize() / 1024.0 );
+            documentSize = new BigDecimal(documentSize).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            documentSizeString = documentSize + " KB";
 
+        }
 
         //create documentData, need category, favorite, and create the s3Key
         UUID uuid =  UUID.randomUUID();
-        String s3Key = uploadDocumentData.getUserId() + "/" + uuid + "." + file.getContentType();
+        String s3Key = userId + "/" + uuid + "." + documentContentType;
+        DocumentData newDocumentData = new DocumentData(userId,
+                documentName.substring(0, documentName.lastIndexOf(".")), uploadDate, documentSizeString,documentContentType,
+                uploadDocumentData.getCategory(), uploadDocumentData.getFavorite(),s3Key, documentName.substring(documentName.lastIndexOf(".")));
+
+        documentManagementRepo.save(newDocumentData);
 
         //upload to awss3
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -158,7 +166,19 @@ public class DocumentService {
 
     }
 
+    @Transactional
+    public void deleteFile(Long userId, Long documentId){
+        // find from database
+        DocumentData currDocumentData = documentManagementRepo.findByDocumentIdAndUserId(documentId,userId)
+                .orElseThrow(() -> new RuntimeException("document is not found or not associated with user"));
+        //delete from aws bucket and database
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName).key(currDocumentData.getS3Key()).build();
+        s3Client.deleteObject(deleteObjectRequest);
 
+        documentManagementRepo.delete(currDocumentData);
+
+    }
 
 
 
