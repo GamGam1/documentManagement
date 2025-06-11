@@ -54,11 +54,11 @@ public class DocumentDataController {
                                                        @RequestParam(required = false) LocalDateTime minDate,
                                                        @RequestParam(required = false) Boolean favorite,
                                                        @RequestParam(required = false) String documentName){
-        if(maxDate == null){
-            maxDate = LocalDateTime.MAX;
+        if (maxDate == null){
+            maxDate = LocalDateTime.of(294276, 12, 31, 23, 59, 59);
         }
-        if(minDate == null){
-            minDate = LocalDateTime.MIN;
+        if (minDate == null){
+            minDate = LocalDateTime.of(1, 1, 1, 0, 0, 0);
         }
         return documentManagementService.getAllDocumentDataFilter(userId, categories, fileExtensions, maxDate, minDate, favorite, documentName);
     }

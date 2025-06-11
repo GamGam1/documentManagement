@@ -18,19 +18,28 @@ public class DocumentData {
     @Positive(message = "Enter a valid user ID")
     private Long userId;
 
-    //@NotNull(message = "Enter a document name")
+    @Pattern(
+            regexp = "^[^/\\\\:*?\"<>|]*$",
+            message = "Must not contain any of the following characters: / \\ : * ? \" < > |"
+    )
+    @NotNull(message = "Enter a non-empty documentName")
     private String documentName;
 
-    //@NotNull(message = "Enter a date")
+
     @JsonFormat(pattern = "MMM d yyyy HH:mm:ss")
     private LocalDateTime uploadDate;
 
-    //@NotNull(message = "Enter file size")
+
     private String fileSize;
 
-    //@NotNull(message = "Enter a content Type")
+
     private String contentType;
 
+    @NotNull(message = "Enter a category")
+    @Pattern(
+            regexp = "^[^/\\\\:*?\"<>|]*$",
+            message = "Must not contain any of the following characters: / \\ : * ? \" < > |"
+    )
     private String category;
 
     private String s3Key;

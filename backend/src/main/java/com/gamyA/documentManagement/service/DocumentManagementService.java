@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -33,6 +35,12 @@ public class DocumentManagementService {
     @Value("${app.aws.s3.bucket-name}")
     private String bucketName;
 
+    @Value("${cloud.aws.credentials.access-key}")
+    private String accessKey;
+
+    @Value("${cloud.aws.credentials.secret-key}")
+    private String secretKey;
+
     private static S3Client s3Client;
 
     private static DocumentManagementRepo documentManagementRepo;
@@ -54,7 +62,9 @@ public class DocumentManagementService {
         DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
         String currS3Key = currDoc.getS3Key();
 
-        try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1).build()){
+        try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey,secretKey)))
+                .build()){
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName).key(currS3Key)
                     .build();
@@ -65,7 +75,7 @@ public class DocumentManagementService {
 
             return presigner.presignGetObject(getObjectPresignRequest).url().toString();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get pre-signed URL");
+            throw new RuntimeException("Failed to get pre-signed URL with Exception:" + e);
         }
 
     }
@@ -75,7 +85,9 @@ public class DocumentManagementService {
         DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found by user"));
         String currS3Key = currDoc.getS3Key();
 
-        try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1).build()){
+        try(S3Presigner presigner = S3Presigner.builder().region(Region.US_WEST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey,secretKey)))
+                .build()){
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName).key(currS3Key)
                     .build();

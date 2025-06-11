@@ -1,9 +1,21 @@
 package com.gamyA.documentManagement.DTOs;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
 public class UpdateDocumentData {
-    //make sure it doesnt contain periods
+    @Pattern(
+            regexp = "^[^/\\\\:*?\"<>|]*$",
+            message = "Must not contain any of the following characters: / \\ : * ? \" < > |"
+    )
+    @NotNull(message = "Enter a non-empty documentName")
     private String documentName;
 
+    @Pattern(
+            regexp = "^[^/\\\\:*?\"<>|]*$",
+            message = "Must not contain any of the following characters: / \\ : * ? \" < > |"
+    )
+    @NotNull(message = "Enter a non-empty category")
     private String category;
 
     private Boolean favorite;
