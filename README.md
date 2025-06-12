@@ -111,7 +111,6 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
       "category": "study",
       "favorite": true
       }
-    ```
   
     * note: the key name expecting for the file is 'file' and `uploadData` for the json
 ### PUT
@@ -124,7 +123,6 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
       "favorite": true,
       "category": "study",
       }
-    ```
 * note: the above shows all three attributes but if only some are being updated you just need to input those attributes into the json body
 * will throw an error if the document is not in the database
 
@@ -142,4 +140,4 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
 
 ### Frontend
 
-* adding in frontend intergration via react or other
+* adding in frontend integration via react or other
