@@ -122,7 +122,7 @@ public class DocumentManagementService {
 
     public void updateDocumentData(Long userId, Long documentId, UpdateDocumentData newDocumentData){
 
-        DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found pr document not associated with user"));
+        DocumentData currDoc = documentManagementRepo.findByDocumentIdAndUserId(documentId, userId).orElseThrow(() -> new RuntimeException("document not found"));
 
         if(newDocumentData.getDocumentName() != null){
             currDoc.setDocumentName(newDocumentData.getDocumentName());
@@ -184,7 +184,7 @@ public class DocumentManagementService {
     public void deleteFile(Long userId, Long documentId){
         // find from database
         DocumentData currDocumentData = documentManagementRepo.findByDocumentIdAndUserId(documentId,userId)
-                .orElseThrow(() -> new RuntimeException("document is not found or not associated with user"));
+                .orElseThrow(() -> new RuntimeException("document is not found"));
         //delete from aws bucket and database
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName).key(currDocumentData.getS3Key()).build();

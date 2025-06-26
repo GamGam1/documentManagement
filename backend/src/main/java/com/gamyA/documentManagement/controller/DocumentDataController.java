@@ -4,6 +4,8 @@ import com.gamyA.documentManagement.DTOs.UpdateDocumentData;
 import com.gamyA.documentManagement.DTOs.UploadDocumentData;
 import com.gamyA.documentManagement.entity.DocumentData;
 import com.gamyA.documentManagement.service.DocumentManagementService;
+import com.gamyA.documentManagement.service.JWTService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,13 +18,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequestMapping(value = "/api/documents")
 public class DocumentDataController {
 
-    private static DocumentManagementService documentManagementService;
+    private DocumentManagementService documentManagementService;
+    private JWTService jwtService;
 
     @Autowired
-    public DocumentDataController(DocumentManagementService documentManagementService) {
-        DocumentDataController.documentManagementService = documentManagementService;
+    public DocumentDataController(DocumentManagementService documentManagementService, JWTService jwtService) {
+        this.documentManagementService = documentManagementService;
+        this.jwtService = jwtService;
     }
 
 
@@ -31,29 +36,33 @@ public class DocumentDataController {
     GET REQUESTS
 
      */
-    @GetMapping(value = "/api/{userId}/document")
-    public List<DocumentData> getUserDocumentData(@PathVariable Long userId){
+    @GetMapping(value = "/getDocuments")
+    public List<DocumentData> getUserDocumentData(HttpServletRequest request){
+        Long userId = jwtService.getUserId(request);
         return documentManagementService.getAllDocumentData(userId);
     }
 
-    @GetMapping(value="/api/{userId}/document/{documentId}/download")
-    public String downloadDataViaUrl(@PathVariable Long userId, @PathVariable Long documentId){
+    @GetMapping(value="/download/{documentId}")
+    public String downloadDataViaUrl(HttpServletRequest request, @PathVariable Long documentId){
+        Long userId = jwtService.getUserId(request);
         return documentManagementService.getPresignUrl(userId,documentId);
     }
 
-    @GetMapping(value="/api/{userId}/document/{documentId}/share")
-    public String getSharableLink(@PathVariable Long userId, @PathVariable Long documentId, @RequestParam long duration){
+    @GetMapping(value="/share/{documentId}")
+    public String getSharableLink(HttpServletRequest request, @PathVariable Long documentId, @RequestParam long duration){
+        Long userId = jwtService.getUserId(request);
         return documentManagementService.getShareableLink(userId, documentId, Duration.ofMinutes(duration));
     }
 
-    @GetMapping(value = "/api/{userId}/document/filter")
-    public List<DocumentData> getAllDocumentDataFilter(@PathVariable Long userId,
+    @GetMapping(value = "/getDocuments/filter")
+    public List<DocumentData> getAllDocumentDataFilter(HttpServletRequest request,
                                                        @RequestParam(required = false) List<String> categories,
                                                        @RequestParam(required = false) List<String> fileExtensions,
                                                        @RequestParam(required = false) LocalDateTime maxDate,
                                                        @RequestParam(required = false) LocalDateTime minDate,
                                                        @RequestParam(required = false) Boolean favorite,
                                                        @RequestParam(required = false) String documentName){
+        Long userId = jwtService.getUserId(request);
         if (maxDate == null){
             maxDate = LocalDateTime.of(294276, 12, 31, 23, 59, 59);
         }
@@ -69,10 +78,11 @@ public class DocumentDataController {
 
      */
 
-    @PutMapping(value="/api/{userId}/{documentId}/update")
-    public void updateDocumentData(@PathVariable Long userId,
+    @PutMapping(value="/update/{documentId}")
+    public void updateDocumentData(HttpServletRequest request,
                                    @PathVariable Long documentId,
                                    @Valid @RequestBody UpdateDocumentData newDocumentData){
+        Long userId = jwtService.getUserId(request);
         documentManagementService.updateDocumentData(userId, documentId, newDocumentData);
     }
 
@@ -82,10 +92,11 @@ public class DocumentDataController {
 
      */
 
-    @PostMapping(value="/api/{userId}/upload", consumes = "multipart/form-data")
-    public void uploadDocument(@PathVariable Long userId,
+    @PostMapping(value="/upload", consumes = "multipart/form-data")
+    public void uploadDocument(HttpServletRequest request,
                                @Valid @RequestPart("uploadData") UploadDocumentData uploadDocumentData,
                                @RequestPart("file") MultipartFile file) throws IOException {
+        Long userId = jwtService.getUserId(request);
         documentManagementService.uploadFile(userId, uploadDocumentData, file);
     }
      /*
@@ -93,8 +104,9 @@ public class DocumentDataController {
     Delete REQUESTS
 
      */
-    @DeleteMapping(value = "/api/{userId}/document/{documentId}/delete")
-    public void deleteDocument(@PathVariable Long userId, @PathVariable Long documentId){
+    @DeleteMapping(value = "/delete/{documentId}")
+    public void deleteDocument(HttpServletRequest request, @PathVariable Long documentId){
+        Long userId = jwtService.getUserId(request);
         documentManagementService.deleteFile(userId, documentId);
     }
 }

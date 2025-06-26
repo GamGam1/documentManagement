@@ -13,10 +13,6 @@ public interface DocumentManagementRepo extends JpaRepository<DocumentData, Long
 
     Optional<DocumentData> findByDocumentIdAndUserId(Long documentId, Long userId);
 
-    List<DocumentData> findByUserIdAndCategory(Long userId, String category);
-
-    void deleteByUserIdAndCategory(Long userId, String category);
-
     List<DocumentData> findByUserId(Long userId);
 
     @Query("SELECT d FROM DocumentData d " +
