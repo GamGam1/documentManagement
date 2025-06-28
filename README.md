@@ -40,7 +40,6 @@ A RESTful API built with Spring Boot for managing documents. Supports creating, 
 * Connecting to Database
     * Make an `application.properties` file in the resource `backend/src/main/resources` folder, and copy the lines provided in the `template-AppProp.txt` file which is located in the `template` folder. Fill in the blanks.
     *  Run the application to make sure it is all working
-    * 
 ## Security
 
 - Passwords are securely hashed using BCrypt.
