@@ -14,6 +14,12 @@ A RESTful API built with Spring Boot for managing documents. Supports creating, 
 
 * uploading and deleting to an AWS S3 bucket
 
+* User registration and login with JWT authentication
+
+* Secure endpoints using Spring Security
+
+* User data isolation (users only access their own data)
+
 ## Tech Stack
 * Java 24
 * Spring Boot
@@ -22,6 +28,7 @@ A RESTful API built with Spring Boot for managing documents. Supports creating, 
 * Maven
 * AWS S3
 * Postman (API Testing)
+* Spring Security + JWT
 
 ## Starting Guide
 * PreReqs
@@ -31,8 +38,16 @@ A RESTful API built with Spring Boot for managing documents. Supports creating, 
     * Database set up 
     * AWS S3 Account
 * Connecting to Database
-    * Make an `application.properties` file in the resource `backend/src/main/resources` folder, and copy the lines provided in the `application-properties-template.txt` file. Fill in the blanks.
+    * Make an `application.properties` file in the resource `backend/src/main/resources` folder, and copy the lines provided in the `template-AppProp.txt` file which is located in the `template` folder. Fill in the blanks.
     *  Run the application to make sure it is all working
+    * 
+## Security
+
+- Passwords are securely hashed using BCrypt.
+- JWTs are used to authenticate and authorize users.
+- Only authenticated users can access protected endpoints.
+- Users can only interact with their own data.
+- Admin role can be extended to manage users or access analytics (planned).
 
 ## Database Information
 
@@ -82,29 +97,58 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
 * **Validation**
     * category: no window characters and must not be null
 
+The `UserInfo` class is the database that stores users.
+
+| Name       | Type   | Description                             |
+|------------|--------|-----------------------------------------|
+| `username` | String | username of the user                    |
+| `password` | String | password of the user (encrypted)        |
+| `role`     | String | role of the user, "USER" is the default |
+| `userId`   | Long   | Id of user                              |
+
+
+
+* **Validation**
+  * username: unique
 
 ## API Endpoints
 
+### AUTH
+* `localhost:8080/api/auth/register`
+  * given a `username` and `password` in the json body it registers that user to the `UserInfo` database.
+  * ```
+      {
+      "username": "jonh doe",
+      "password": "password123!"
+      }
+* `localhost:8080/api/auth/login`
+  * given a `username` and `password` in the json body, it checks if the credentials are correct. If they are correct it returns a JWT token that is needed to use the rest of the endpoints.
+  * ```
+      {
+      "username": "jonh doe",
+      "password": "password123!"
+      }
+
+* Note: for the following end points they expect a valid JWT Token so the `userId` can be extracted.
 ### GET
 
-* `localhost:8080/api/{userId}/document`
-    * gets all document of the user
-    * will throw an error if `userId` is not in the database
-* `localhost:8080/api/{user}/filter?categories=...&fileExtensions=&...&categories=...&fileExtensions=&...&maxDate=...&minDate=...&documentName=...&favorite=...`
+* `localhost:8080/api/documents/getDocuments`
+    * gets all document of the user, based on the JWT Token
+* `localhost:8080/api/documents/filter?categories=...&fileExtensions=&...&categories=...&fileExtensions=&...&maxDate=...&minDate=...&documentName=...&favorite=...`
     * This will return documents of the user filtering out multiple conditions 
     * note for multiple `categories` or `fileExtensions` filters you need to do separate calls as shown above
     * note the api endpoint does not expect either query parameters shown above
     * will throw an error if no documents are found
-* `localhost:8080/api/{userId}/document/{documentId}/download`
+* `localhost:8080/api/documents/download/{documentId}`
     * gives a pre-signed url to download the document from the AWS S3 bucket
     * will throw an error if the document is not found in database
-* `localhost:8080/api/{userId}/document/{documentId}/share?duration=...`
+* `localhost:8080/api/documents/share/{documentId}?duration=...`
     * gives a pre-signed url to share with a duration of `duration` mins
     * will throw an error if the document is not found in database
 
 ### POST
 
-* `localhost:8080/api/{userId}/upload`
+* `localhost:8080/api/documents/upload`
     * saves an uploaded file alongside a `uploadedDocumentData`jsn body
     * ```
       {
@@ -115,8 +159,8 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
     * note: the key name expecting for the file is 'file' and `uploadData` for the json
 ### PUT
 
-* `localhost:8080/api/{userId}/{documentId}/update`
-    * given a `userid`, `documentId` and an `UpdatedDocumentData` it updates either `documentName`, `category`, `favorite`, or all 3 depending on the json body
+* `localhost:8080/api/documents/update/{documentId}`
+    * given a `documentId` and an `UpdatedDocumentData` it updates either `documentName`, `category`, `favorite`, or all 3 depending on the json body
     * ```` 
       {
       "documentName": "dmv_docs",
@@ -128,15 +172,15 @@ The `UploadDocumentData` class, helps with data transferring when it comes to up
 
 ### DELETE
 
-* `localhost:8080/api/{userId}/document/{documentId}/delete`
-    * given an `userId` and `documentId` it will delete that document from the database and the Amazon S3 bucket
+* `localhost:8080/api/documents/delete/{documentId}`
+    * given a `documentId` it will delete that document from the database and the Amazon S3 bucket
     * will throw an error if document is not found in database
 
 ## Future Improvements
 
 ### Backend
 
-*  add User authentication (JWT)
+*  add role based actions
 
 ### Frontend
 
